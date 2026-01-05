@@ -1,0 +1,130 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const imageArray = [
+    "black-alien.png",
+    "earth.png",
+    "robot.jpeg",
+    "spaceship.jpeg",
+    "star.png",
+    "tower.png",
+    "trooper-face.png",
+    "white-alien.jpeg"
+  ];
+  
+  let cardsArray = [...imageArray, ...imageArray];
+  let firstCard = null;
+  let secondCard = null;
+  let lockBoard = false;
+  let matches = 0;
+  let moves = 0;
+  let timerInterval = null;
+  let time = 0;
+  
+  const startBtn = document.getElementById("startBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const table = document.getElementById("table");
+  const game = document.getElementById("game");
+  const message = document.getElementById("message");
+  const timerDisplay = document.getElementById("timer");
+  const movesDisplay = document.getElementById("moves");
+  
+  const flipSound = document.getElementById("flipSound");
+  const matchSound = document.getElementById("matchSound");
+  const noMatchSound = document.getElementById("noMatchSound");
+  const winSound = document.getElementById("winSound");
+  
+  startBtn.addEventListener("click", startGame);
+  restartBtn.addEventListener("click", startGame);
+  
+  function startGame() {
+    table.style.display = "block";
+    restartBtn.style.display = "inline-block";
+    message.textContent = "";
+    game.innerHTML = "";
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+    matches = 0;
+    moves = 0;
+    time = 0;
+    movesDisplay.textContent = `Moves: ${moves}`;
+    timerDisplay.textContent = `Time: ${time}s`;
+    
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      time++;
+      timerDisplay.textContent = `Time: ${time}s`;
+    }, 1000);
+    
+    cardsArray = shuffle([...imageArray, ...imageArray]);
+    createBoard();
+  }
+  
+  function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+  
+  function createBoard() {
+    cardsArray.forEach(src => {
+      const card = document.createElement("div");
+      card.classList.add("card");
+      
+      const cardInner = document.createElement("div");
+      cardInner.classList.add("card-inner");
+      
+      const cardFront = document.createElement("div");
+      cardFront.classList.add("card-front");
+      
+      const cardBack = document.createElement("div");
+      cardBack.classList.add("card-back");
+      cardBack.style.backgroundImage = `url(${src})`;
+      
+      cardInner.appendChild(cardFront);
+      cardInner.appendChild(cardBack);
+      card.appendChild(cardInner);
+      
+      card.addEventListener("click", () => flipCard(card, src));
+      
+      game.appendChild(card);
+    });
+  }
+  
+  function flipCard(card, src) {
+    if (lockBoard || card.classList.contains("flipped")) return;
+    flipSound.play();
+    card.classList.add("flipped");
+    if (!firstCard) {
+      firstCard = { card, src };
+      return;
+    }
+    secondCard = { card, src };
+    moves++;
+    movesDisplay.textContent = `Moves: ${moves}`;
+    checkMatch();
+  }
+  
+  function checkMatch() {
+    if (firstCard.src === secondCard.src) {
+      matches++;
+      matchSound.play();
+      resetCards();
+      if (matches === imageArray.length) {
+        winSound.play();
+        message.textContent = `🎉 You Win! Time: ${time}s | Moves: ${moves}`;
+        clearInterval(timerInterval);
+      }
+    } else {
+      noMatchSound.play();
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.card.classList.remove("flipped");
+        secondCard.card.classList.remove("flipped");
+        resetCards();
+      }, 1000);
+    }
+  }
+  
+  function resetCards() {
+    [firstCard, secondCard] = [null, null];
+    lockBoard = false;
+  }
+});￼Enter
